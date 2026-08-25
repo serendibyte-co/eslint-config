@@ -38,10 +38,10 @@ export function node({
       rules: {
         'import-x/no-cycle': 'error',
         'import-x/no-duplicates': 'error',
-        // Server logs go to a log stream, not a browser console — allow
-        // warn/error for real diagnostics, flag stray console.log left
-        // over from debugging.
-        'no-console': ['warn', { allow: ['warn', 'error'] }],
+        // Only for a server that ships logs to a log stream (Workers) —
+        // console output IS the point for CLI/seed/tooling scripts
+        // (runtime: 'bun' or 'node'), so don't restrict it there.
+        ...(runtime === 'worker' ? { 'no-console': ['warn', { allow: ['warn', 'error'] }] } : {}),
         ...extraRules,
       },
     },
