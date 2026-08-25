@@ -90,8 +90,15 @@ Bun does not resolve semver _ranges_ on git dependencies — only an exact
 2. Run `bun run test` (lints `test/*.ts`/`*.tsx` against the presets — the
    package's own smoke test) and confirm CI is green.
 3. Update this README if a preset's options or the hooks setup changed.
-4. Commit, push.
-5. `git tag vX.Y.Z && git push --tags`.
+4. **Bump the `version` field in `package.json` to match the tag you're
+   about to push** — consumers don't resolve it (git-URL deps pin an exact
+   tag/commit, not this field), but tooling like `bun pm ls` reads it, and a
+   stale value is confusing. Do this in the same commit as the fix/feature,
+   not as an afterthought once the tag's already been decided.
+5. Commit, push.
+6. `git tag vX.Y.Z && git push --tags` — the tag must match step 4's version
+   exactly. Tags are immutable once pushed; if you tag before noticing a
+   mismatch, fix forward with a new patch version rather than retagging.
 
 ## Rule severity policy
 
