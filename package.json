@@ -1,6 +1,6 @@
 {
   "name": "@serendibyte-co/eslint-config",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Shared ESLint flat-config presets (base/node/react) for serendibyte-co projects",
   "type": "module",
   "license": "UNLICENSED",
