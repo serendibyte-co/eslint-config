@@ -34,11 +34,11 @@ export function lintStagedConfig({ workspaces = [], rootFiles = ['e2e/**/*.ts'] 
       extensions.length === 1
         ? `${dir}/**/*.${extensions[0]}`
         : `${dir}/**/*.{${extensions.join(',')}}`
-    config[pattern] = [`bun --cwd ${dir} eslint --fix`]
+    config[pattern] = [`bun --cwd ${dir} eslint --fix --max-warnings=0`]
   }
 
   if (rootFiles.length > 0) {
-    config[`{${rootFiles.join(',')}}`] = ['eslint --fix']
+    config[`{${rootFiles.join(',')}}`] = ['eslint --fix --max-warnings=0']
   }
 
   config['*.{ts,tsx,js,jsx,json,md,css}'] = ['prettier --write']
