@@ -7,13 +7,14 @@ import tseslint from 'typescript-eslint'
 import importX from 'eslint-plugin-import-x'
 import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript'
 import prettier from 'eslint-config-prettier'
-import { base } from './base.js'
+import { base, resolveBoundariesConfig } from './base.js'
 
 /**
  * @param {{
  *   tsconfigRootDir: string,
  *   files?: string[],
  *   runtime?: 'worker' | 'bun' | 'node',
+ *   boundaries?: Parameters<typeof resolveBoundariesConfig>[0],
  *   extraRules?: Record<string, unknown>,
  * }} options
  */
@@ -21,11 +22,12 @@ export function node({
   tsconfigRootDir,
   files = ['**/*.ts'],
   runtime = 'worker',
+  boundaries,
   extraRules = {},
 }) {
   const globalsByRuntime = { worker: globals.worker, bun: globals.bunBuiltin, node: globals.node }
   return tseslint.config(
-    ...base({ tsconfigRootDir, files }),
+    ...base({ tsconfigRootDir, files, boundaries }),
     {
       extends: [importX.flatConfigs.typescript],
       files,
@@ -38,7 +40,6 @@ export function node({
       rules: {
         'import-x/no-cycle': 'error',
         'import-x/no-duplicates': 'error',
-        'import-x/no-relative-parent-imports': 'warn',
         // Only for a server that ships logs to a log stream (Workers) —
         // console output IS the point for CLI/seed/tooling scripts
         // (runtime: 'bun' or 'node'), so don't restrict it there.

@@ -27,7 +27,7 @@ import { node } from '@serendibyte-co/eslint-config/node'
 export default node({ tsconfigRootDir: import.meta.dirname })
 ```
 
-Options: `runtime` (`'worker'` default, or `'bun'`/`'node'`), `files`,
+Options: `runtime` (`'worker'` default, or `'bun'`/`'node'`), `files`, `boundaries`,
 `extraRules`.
 
 **React / Vite frontend:**
@@ -38,10 +38,61 @@ import { react } from '@serendibyte-co/eslint-config/react'
 export default react({ tsconfigRootDir: import.meta.dirname })
 ```
 
-Options: `reactVersion` (`'19'` default), `files`, `extraRules`.
+Options: `reactVersion` (`'19'` default), `files`, `boundaries`, `extraRules`.
 
 Both presets already include Prettier conflict-resolution
 (`eslint-config-prettier`) — don't add it again in the consuming project.
+
+### Architecture boundaries (eslint-plugin-boundaries)
+
+`base`, `node`, and `react` presets include `eslint-plugin-boundaries` and TypeScript path resolution. You can define architectural boundaries either directly in standard flat config or via the inline `boundaries` option:
+
+**Standard Flat Config syntax:**
+
+```js
+// eslint.config.js
+import { node } from '@serendibyte-co/eslint-config/node'
+
+export default [
+  ...node({ tsconfigRootDir: import.meta.dirname }),
+  {
+    settings: {
+      'boundaries/elements': [
+        { type: 'helpers', pattern: 'src/helpers/*' },
+        { type: 'services', pattern: 'src/services/*' },
+      ],
+    },
+    rules: {
+      'boundaries/dependencies': [
+        'error',
+        {
+          default: 'disallow',
+          policies: [
+            { from: { element: { type: 'services' } }, allow: [{ to: { element: { type: 'helpers' } } }] },
+          ],
+        },
+      ],
+    },
+  },
+]
+```
+
+**Inline `boundaries` option:**
+
+```js
+export default node({
+  tsconfigRootDir: import.meta.dirname,
+  boundaries: {
+    elements: [
+      { type: 'helpers', pattern: 'src/helpers/*' },
+      { type: 'services', pattern: 'src/services/*' },
+    ],
+    policies: [
+      { from: { element: { type: 'services' } }, allow: [{ to: { element: { type: 'helpers' } } }] },
+    ],
+  },
+})
+```
 
 ## Pre-commit hooks
 

@@ -26,6 +26,10 @@ import unicorn from 'eslint-plugin-unicorn'
 import eslintComments from '@eslint-community/eslint-plugin-eslint-comments'
 import noSecrets from 'eslint-plugin-no-secrets'
 import simpleImportSort from 'eslint-plugin-simple-import-sort'
+import boundariesPlugin from 'eslint-plugin-boundaries'
+import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript'
+
+export { default as boundaries } from 'eslint-plugin-boundaries'
 
 // typescript-eslint rules from `recommendedTypeChecked` that commonly have
 // pre-existing violations in a real codebase — type-aware promise/any-flow
@@ -221,15 +225,27 @@ export const unicornRules = {
 
 /**
  * Shared base — type-aware TS linting, sonarjs, security, regexp, promise,
- * unicorn, import-sort, consistent-type-imports. No globals/parser wiring
- * of its own beyond what every consumer needs; node()/react() add the rest.
+ * unicorn, import-sort, boundaries, consistent-type-imports. No globals/
+ * runtime wiring of its own beyond what every consumer needs; node()/react()
+ * add the rest.
  *
- * @param {{ tsconfigRootDir: string, files?: string[] }} options
+ * @param {{
+ *   tsconfigRootDir: string,
+ *   files?: string[],
+ *   boundaries?: Parameters<typeof resolveBoundariesConfig>[0],
+ *   extraRules?: Record<string, unknown>,
+ * }} options
  */
-export function base({ tsconfigRootDir, files = ['**/*.ts'] }) {
+export function base({
+  tsconfigRootDir,
+  files = ['**/*.ts'],
+  boundaries,
+  extraRules = {},
+}) {
   if (!tsconfigRootDir) {
     throw new Error('@serendibyte-co/eslint-config: base() requires { tsconfigRootDir }')
   }
+  const boundariesConfig = resolveBoundariesConfig(boundaries)
   return tseslint.config({
     extends: [
       js.configs.recommended,
@@ -249,6 +265,16 @@ export function base({ tsconfigRootDir, files = ['**/*.ts'] }) {
       '@eslint-community/eslint-comments': eslintComments,
       'no-secrets': noSecrets,
       'simple-import-sort': simpleImportSort,
+      boundaries: boundariesPlugin,
+    },
+    settings: {
+      'import/resolver': {
+        typescript: {
+          alwaysTryTypes: true,
+          project: `${tsconfigRootDir}/tsconfig.json`,
+        },
+      },
+      ...boundariesConfig.settings,
     },
     rules: {
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
@@ -261,6 +287,70 @@ export function base({ tsconfigRootDir, files = ['**/*.ts'] }) {
       ...promiseErrorDowngrades,
       ...importSortRules,
       ...unicornRules,
+      ...boundariesConfig.rules,
+      ...extraRules,
     },
   })
 }
+
+/**
+ * Normalizes user-supplied boundaries options into ESLint settings and rules.
+ *
+ * @param {{
+ *   elements?: Array<Record<string, unknown>>,
+ *   files?: Array<Record<string, unknown>>,
+ *   policies?: Array<Record<string, unknown>>,
+ *   rules?: Array<Record<string, unknown>> | Record<string, unknown>,
+ *   dependenciesOptions?: Record<string, unknown>,
+ *   default?: 'allow' | 'disallow',
+ *   severity?: 'warn' | 'error' | 'off',
+ *   ignore?: string[],
+ *   include?: string[],
+ *   noUnknownFiles?: 'warn' | 'error' | 'off',
+ *   noUnknownDependencies?: 'warn' | 'error' | 'off',
+ *   noIgnoredDependencies?: 'warn' | 'error' | 'off',
+ * } | undefined} boundaries
+ */
+export function resolveBoundariesConfig(boundaries) {
+  if (!boundaries) {
+    return { settings: {}, rules: {} }
+  }
+
+  const settings = {}
+  const rules = {}
+
+  if (boundaries.elements) settings['boundaries/elements'] = boundaries.elements
+  if (boundaries.files) settings['boundaries/files'] = boundaries.files
+  if (boundaries.ignore) settings['boundaries/ignore'] = boundaries.ignore
+  if (boundaries.include) settings['boundaries/include'] = boundaries.include
+
+  const policies = boundaries.policies ?? boundaries.rules
+  if (policies) {
+    const policyOptions = Array.isArray(policies)
+      ? {
+          default: boundaries.default ?? 'disallow',
+          policies,
+          ...(boundaries.dependenciesOptions ?? {}),
+        }
+      : policies
+    rules['boundaries/dependencies'] = [boundaries.severity ?? 'warn', policyOptions]
+  } else if (boundaries.dependenciesOptions) {
+    rules['boundaries/dependencies'] = [
+      boundaries.severity ?? 'warn',
+      boundaries.dependenciesOptions,
+    ]
+  }
+
+  if (boundaries.noUnknownFiles) {
+    rules['boundaries/no-unknown-files'] = boundaries.noUnknownFiles
+  }
+  if (boundaries.noUnknownDependencies) {
+    rules['boundaries/no-unknown-dependencies'] = boundaries.noUnknownDependencies
+  }
+  if (boundaries.noIgnoredDependencies) {
+    rules['boundaries/no-ignored-dependencies'] = boundaries.noIgnoredDependencies
+  }
+
+  return { settings, rules }
+}
+

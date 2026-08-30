@@ -10,13 +10,14 @@ import jsxA11y from 'eslint-plugin-jsx-a11y'
 import importX from 'eslint-plugin-import-x'
 import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript'
 import prettier from 'eslint-config-prettier'
-import { base } from './base.js'
+import { base, resolveBoundariesConfig } from './base.js'
 
 /**
  * @param {{
  *   tsconfigRootDir: string,
  *   files?: string[],
  *   reactVersion?: string,
+ *   boundaries?: Parameters<typeof resolveBoundariesConfig>[0],
  *   extraRules?: Record<string, unknown>,
  * }} options
  */
@@ -24,10 +25,11 @@ export function react({
   tsconfigRootDir,
   files = ['**/*.{ts,tsx}'],
   reactVersion = '19',
+  boundaries,
   extraRules = {},
 }) {
   return tseslint.config(
-    ...base({ tsconfigRootDir, files }),
+    ...base({ tsconfigRootDir, files, boundaries }),
     {
       extends: [importX.flatConfigs.typescript],
       files,
@@ -57,7 +59,6 @@ export function react({
         'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
         'import-x/no-cycle': 'error',
         'import-x/no-duplicates': 'error',
-        'import-x/no-relative-parent-imports': 'warn',
         'jsx-a11y/click-events-have-key-events': 'warn',
         'jsx-a11y/no-noninteractive-element-interactions': 'warn',
         'jsx-a11y/no-autofocus': 'warn',
