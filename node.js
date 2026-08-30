@@ -38,6 +38,7 @@ export function node({
       rules: {
         'import-x/no-cycle': 'error',
         'import-x/no-duplicates': 'error',
+        'import-x/no-relative-parent-imports': 'warn',
         // Only for a server that ships logs to a log stream (Workers) —
         // console output IS the point for CLI/seed/tooling scripts
         // (runtime: 'bun' or 'node'), so don't restrict it there.

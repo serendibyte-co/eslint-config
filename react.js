@@ -57,6 +57,7 @@ export function react({
         'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
         'import-x/no-cycle': 'error',
         'import-x/no-duplicates': 'error',
+        'import-x/no-relative-parent-imports': 'warn',
         'jsx-a11y/click-events-have-key-events': 'warn',
         'jsx-a11y/no-noninteractive-element-interactions': 'warn',
         'jsx-a11y/no-autofocus': 'warn',
