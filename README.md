@@ -97,7 +97,16 @@ export default node({
       },
     ],
   },
+  // Automatically enforces relative paths (./, ../) inside a module and
+  // absolute alias (@/...) when importing from outside the module.
+  boundaryPaths: true,
 })
+```
+
+You can also import `boundaryPathRules` directly from `@serendibyte-co/eslint-config/base`:
+
+```js
+import { boundaryPathRules } from '@serendibyte-co/eslint-config/base'
 ```
 
 ## Pre-commit hooks

@@ -348,3 +348,57 @@ export function resolveBoundariesConfig(boundaries) {
 
   return { settings, rules }
 }
+
+/**
+ * Generates rules enforcing relative paths inside a module and absolute aliases outside.
+ * - Files at module root (e.g. src/module/*.ts or src/*.ts) cannot use `../` (must use `./` for siblings, `@/` for external).
+ * - Files in module subdirectories (e.g. src/module/sub/**) can use `../` to reach their module root, but cannot use `../../` to escape the module.
+ *
+ * @param {{
+ *   severity?: 'warn' | 'error' | 'off',
+ *   rootFiles?: string[],
+ *   subFiles?: string[],
+ * }} [options]
+ */
+export function boundaryPathRules({
+  severity = 'warn',
+  rootFiles = ['src/*.ts', 'src/*.tsx', 'src/*/*.ts', 'src/*/*.tsx'],
+  subFiles = ['src/*/*/**/*.ts', 'src/*/*/**/*.tsx'],
+} = {}) {
+  return [
+    {
+      files: rootFiles,
+      rules: {
+        'no-restricted-imports': [
+          severity,
+          {
+            patterns: [
+              {
+                group: ['../*'],
+                message:
+                  'Module root and src-level files must use absolute alias (@/...) for external dependencies instead of relative parent imports (../).',
+              },
+            ],
+          },
+        ],
+      },
+    },
+    {
+      files: subFiles,
+      rules: {
+        'no-restricted-imports': [
+          severity,
+          {
+            patterns: [
+              {
+                group: ['../../*'],
+                message:
+                  'Submodules must not use multi-level parent traversals (../../) to escape their module. Use @/ instead.',
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ]
+}

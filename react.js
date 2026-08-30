@@ -10,7 +10,7 @@ import jsxA11y from 'eslint-plugin-jsx-a11y'
 import importX from 'eslint-plugin-import-x'
 import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript'
 import prettier from 'eslint-config-prettier'
-import { base, resolveBoundariesConfig } from './base.js'
+import { base, boundaryPathRules, resolveBoundariesConfig } from './base.js'
 
 /**
  * @param {{
@@ -18,6 +18,7 @@ import { base, resolveBoundariesConfig } from './base.js'
  *   files?: string[],
  *   reactVersion?: string,
  *   boundaries?: Parameters<typeof resolveBoundariesConfig>[0],
+ *   boundaryPaths?: boolean | Parameters<typeof boundaryPathRules>[0],
  *   extraRules?: Record<string, unknown>,
  * }} options
  */
@@ -26,10 +27,14 @@ export function react({
   files = ['**/*.{ts,tsx}'],
   reactVersion = '19',
   boundaries,
+  boundaryPaths,
   extraRules = {},
 }) {
   return tseslint.config(
     ...base({ tsconfigRootDir, files, boundaries }),
+    ...(boundaryPaths
+      ? boundaryPathRules(typeof boundaryPaths === 'object' ? boundaryPaths : {})
+      : []),
     {
       extends: [importX.flatConfigs.typescript],
       files,
