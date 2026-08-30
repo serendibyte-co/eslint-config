@@ -236,12 +236,7 @@ export const unicornRules = {
  *   extraRules?: Record<string, unknown>,
  * }} options
  */
-export function base({
-  tsconfigRootDir,
-  files = ['**/*.ts'],
-  boundaries,
-  extraRules = {},
-}) {
+export function base({ tsconfigRootDir, files = ['**/*.ts'], boundaries, extraRules = {} }) {
   if (!tsconfigRootDir) {
     throw new Error('@serendibyte-co/eslint-config: base() requires { tsconfigRootDir }')
   }
@@ -353,4 +348,3 @@ export function resolveBoundariesConfig(boundaries) {
 
   return { settings, rules }
 }
-

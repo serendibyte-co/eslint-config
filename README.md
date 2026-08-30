@@ -68,7 +68,10 @@ export default [
         {
           default: 'disallow',
           policies: [
-            { from: { element: { type: 'services' } }, allow: [{ to: { element: { type: 'helpers' } } }] },
+            {
+              from: { element: { type: 'services' } },
+              allow: [{ to: { element: { type: 'helpers' } } }],
+            },
           ],
         },
       ],
@@ -88,7 +91,10 @@ export default node({
       { type: 'services', pattern: 'src/services/*' },
     ],
     policies: [
-      { from: { element: { type: 'services' } }, allow: [{ to: { element: { type: 'helpers' } } }] },
+      {
+        from: { element: { type: 'services' } },
+        allow: [{ to: { element: { type: 'helpers' } } }],
+      },
     ],
   },
 })
