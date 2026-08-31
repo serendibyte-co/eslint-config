@@ -4,10 +4,9 @@ Shared ESLint flat-config presets: type-aware TypeScript linting, security,
 regexp/ReDoS, promise, unicorn, import sorting, and consistent type imports —
 plus `node`/`react` presets layering on the runtime-specific pieces.
 
-Extracted from [matchbox21](https://github.com/Rajitha/matchbox21)'s working
-config after a full audit against industry rule sets (sonarjs, security,
-regexp, promise, unicorn) and a sibling project's config — see this repo's
-CHANGELOG for what's in each preset and why.
+Extracted from a working monorepo's config after a full audit against
+industry rule sets (sonarjs, security, regexp, promise, unicorn) — see this
+repo's CHANGELOG for what's in each preset and why.
 
 ## Install
 
@@ -97,17 +96,40 @@ export default node({
       },
     ],
   },
-  // Automatically enforces relative paths (./, ../) inside a module and
-  // absolute alias (@/...) when importing from outside the module.
+  // Enforce the import convention (serendibyte/import-boundaries):
+  //   same module      → relative (./ , ../ that stays inside the module)
+  //   different module  → the in-package alias (@/…)
+  //   package root      → the in-package alias (@/…)
+  //   different package → a configured package alias, never ../../<pkg>
+  // `true` derives the in-package alias from <tsconfigRootDir>/tsconfig.json
+  // `paths`; the modules come from `boundaries.elements`.
   boundaryPaths: true,
 })
 ```
 
-You can also import `boundaryPathRules` directly from `@serendibyte-co/eslint-config/base`:
+`boundaryPaths` was a directory-depth `no-restricted-imports` heuristic through
+v1.1.x; **v1.2.0** replaced it in place with the element-aware
+`serendibyte/import-boundaries` rule (same option name). Pass an object to set
+options explicitly:
 
 ```js
-import { boundaryPathRules } from '@serendibyte-co/eslint-config/base'
+boundaryPaths: {
+  aliases: { '@/': 'src' },          // or { '@/': '.' } — omit to derive from tsconfig
+  packageAliases: {                  // cross-package: target dir relative to the monorepo root
+    '@scope/pkg-a/': 'packages/pkg-a/src',
+    '@scope/pkg-b/': 'packages/pkg-b/src',
+  },
+  severity: 'error',                 // 'warn' (default) | 'error' | 'off'
+  checkTypeImports: true,            // also check `import type` (default true)
+  allowSameModuleAlias: false,       // escape hatch for `@/mod/x` within `mod`
+}
 ```
+
+Autofix rewrites in-package imports both directions; cross-package violations
+carry a suggestion only. The `serendibyte` plugin is also exported
+(`@serendibyte-co/eslint-config/plugin`) if you need to wire the rule by hand,
+and `boundaryPathRules` / `folderElements` from
+`@serendibyte-co/eslint-config/base`.
 
 ## Pre-commit hooks
 

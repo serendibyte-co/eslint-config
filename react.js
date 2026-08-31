@@ -33,7 +33,13 @@ export function react({
   return tseslint.config(
     ...base({ tsconfigRootDir, files, boundaries }),
     ...(boundaryPaths
-      ? boundaryPathRules(typeof boundaryPaths === 'object' ? boundaryPaths : {})
+      ? boundaryPathRules({
+          deriveAliases: boundaryPaths === true,
+          tsconfigRootDir,
+          elements: boundaries?.elements,
+          files: boundaries?.files,
+          ...(typeof boundaryPaths === 'object' ? boundaryPaths : {}),
+        })
       : []),
     {
       extends: [importX.flatConfigs.typescript],
@@ -68,9 +74,9 @@ export function react({
         'jsx-a11y/no-noninteractive-element-interactions': 'warn',
         'jsx-a11y/no-autofocus': 'warn',
         'jsx-a11y/label-has-associated-control': 'warn',
-        // Fires on React/TSX specifically, not repo-wide, per matchbox21's
-        // rollout — still worth carrying here since any React project can
-        // hit the same patterns.
+        // Scoped to React/TSX specifically rather than repo-wide — still
+        // worth carrying here since any React project can hit the same
+        // patterns.
         'sonarjs/deprecation': 'warn',
         'sonarjs/no-nested-conditional': 'warn',
         'sonarjs/no-nested-template-literals': 'warn',

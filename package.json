@@ -1,6 +1,6 @@
 {
   "name": "@serendibyte-co/eslint-config",
-  "version": "1.0.7",
+  "version": "1.2.0",
   "description": "Shared ESLint flat-config presets (base/node/react) for serendibyte-co projects",
   "type": "module",
   "license": "UNLICENSED",
@@ -9,12 +9,14 @@
     "./base": "./base.js",
     "./node": "./node.js",
     "./react": "./react.js",
+    "./plugin": "./plugin.js",
     "./hooks/lint-staged.js": "./hooks/lint-staged.js",
     "./hooks/report-remaining-lint.js": "./hooks/report-remaining-lint.js",
     "./hooks/fix-hooks-path.sh": "./hooks/fix-hooks-path.sh"
   },
   "scripts": {
-    "test": "eslint ."
+    "test": "eslint . && bun test test/",
+    "test:rules": "bun test test/"
   },
   "peerDependencies": {
     "eslint": ">=9.0.0",
@@ -39,10 +41,12 @@
     "eslint-plugin-sonarjs": "^4.2.0",
     "eslint-plugin-unicorn": "^73.0.0",
     "globals": "^17.11.0",
+    "micromatch": "^4.0.8",
     "typescript-eslint": "^8.67.0"
   },
   "devDependencies": {
     "@types/react": "^19.2.18",
+    "@typescript-eslint/rule-tester": "^8.68.0",
     "eslint": "^10.8.1",
     "react": "^19.2.8",
     "typescript": "^5.7.3"

@@ -31,7 +31,13 @@ export function node({
   return tseslint.config(
     ...base({ tsconfigRootDir, files, boundaries }),
     ...(boundaryPaths
-      ? boundaryPathRules(typeof boundaryPaths === 'object' ? boundaryPaths : {})
+      ? boundaryPathRules({
+          deriveAliases: boundaryPaths === true,
+          tsconfigRootDir,
+          elements: boundaries?.elements,
+          files: boundaries?.files,
+          ...(typeof boundaryPaths === 'object' ? boundaryPaths : {}),
+        })
       : []),
     {
       extends: [importX.flatConfigs.typescript],

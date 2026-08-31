@@ -3,18 +3,21 @@
 // imports. node.js and react.js both build on this — it has no React/Worker/
 // Bun-specific pieces of its own.
 //
-// Ported from matchbox21's eslint.base.js + the wiring every one of its 7
-// eslint.config.js files repeated by hand (extends array, plugin
+// Extracted from a working monorepo's eslint.base.js + the wiring every one
+// of its eslint.config.js files repeated by hand (extends array, plugin
 // registration, languageOptions). That repetition is exactly what this
 // package exists to remove — a consuming project's own eslint.config.js
 // should just be `export default node({ tsconfigRootDir: import.meta.dirname })`.
 //
 // Severity note: everything downgraded to 'warn' below is downgraded because
-// it had *some* real violation somewhere across matchbox21's codebase when
-// this was extracted — not because the rule doesn't matter. A fresh project
-// starting from this config may find these are all clean and can promote
-// them to 'error' immediately; that's a call for that project to make, not
-// something this package assumes.
+// it had *some* real violation somewhere in the codebase this was extracted
+// from — not because the rule doesn't matter. A fresh project starting from
+// this config may find these are all clean and can promote them to 'error'
+// immediately; that's a call for that project to make, not something this
+// package assumes.
+
+import fs from 'node:fs'
+import path from 'node:path'
 
 import js from '@eslint/js'
 import tseslint from 'typescript-eslint'
@@ -29,7 +32,10 @@ import simpleImportSort from 'eslint-plugin-simple-import-sort'
 import boundariesPlugin from 'eslint-plugin-boundaries'
 import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript'
 
+import serendibytePlugin from './plugin.js'
+
 export { default as boundaries } from 'eslint-plugin-boundaries'
+export { default as serendibyte } from './plugin.js'
 
 // typescript-eslint rules from `recommendedTypeChecked` that commonly have
 // pre-existing violations in a real codebase — type-aware promise/any-flow
@@ -83,9 +89,9 @@ export const promiseErrorDowngrades = {
 }
 
 // eslint-plugin-regexp's flat/recommended rules that had real violations in
-// matchbox21. no-super-linear-backtracking in particular is a genuine
-// ReDoS-risk finding, not style — worth checking each hit per project, not
-// dismissing as routine cleanup.
+// the source codebase. no-super-linear-backtracking in particular is a
+// genuine ReDoS-risk finding, not style — worth checking each hit per
+// project, not dismissing as routine cleanup.
 export const regexpErrorDowngrades = {
   'regexp/no-super-linear-backtracking': 'warn',
   'regexp/no-unused-capturing-group': 'warn',
@@ -110,8 +116,7 @@ export const importSortRules = {
 // per function) beyond sonarjs's looser defaults above. Off by default —
 // call strictLengthRules({ tsx: true }) from a consuming config and spread
 // the result in if you want it, scoped to your own production-code files
-// (exclude *.test.ts, data/fixture directories yourself, same as
-// matchbox21 does per-package).
+// (exclude *.test.ts and data/fixture directories yourself, per package).
 export function strictLengthRules({ tsx = false } = {}) {
   return {
     'max-lines': ['warn', { max: 300, skipBlankLines: true, skipComments: true }],
@@ -125,7 +130,7 @@ export function strictLengthRules({ tsx = false } = {}) {
 // eslint-plugin-unicorn's flat/recommended, with the rules turned off/
 // reconfigured because they fight standard TS/React/Node conventions rather
 // than catching real issues, plus the rules that had real violations
-// somewhere in matchbox21 downgraded to 'warn'.
+// somewhere in the source codebase downgraded to 'warn'.
 export const unicornRules = {
   // Flags standard, readable names (req, res, err, props, ctx, i, ref).
   'unicorn/prevent-abbreviations': 'off',
@@ -204,15 +209,15 @@ export const unicornRules = {
   'unicorn/prefer-at': 'warn',
   'unicorn/prefer-else-if': 'warn',
   'unicorn/prefer-spread': 'warn',
-  // Checked before downgrading in matchbox21: hits there were all sorting
-  // string arrays for order-independent test comparison, not the
-  // numeric-sort footgun the rule targets. Still worth a look per project.
+  // Checked before downgrading: the hits were all sorting string arrays for
+  // order-independent test comparison, not the numeric-sort footgun the rule
+  // targets. Still worth a look per project.
   'unicorn/require-array-sort-compare': 'warn',
   'unicorn/no-duplicate-loops': 'warn',
   'unicorn/no-immediate-mutation': 'warn',
-  // Checked before downgrading in matchbox21: hits there were all Postgres's
-  // own '{key}' JSONB path-array syntax inside raw SQL, misread as a
-  // forgotten `$`. Re-check per project if you build raw SQL strings.
+  // Checked before downgrading: the hits were all Postgres's own '{key}'
+  // JSONB path-array syntax inside raw SQL, misread as a forgotten `$`.
+  // Re-check per project if you build raw SQL strings.
   'unicorn/no-incorrect-template-string-interpolation': 'warn',
   'unicorn/no-unnecessary-boolean-comparison': 'warn',
   'unicorn/no-useless-collection-argument': 'warn',
@@ -314,6 +319,26 @@ export function resolveBoundariesConfig(boundaries) {
   const settings = {}
   const rules = {}
 
+  // v7-native descriptor guardrail: `mode:` or a `*` in `pattern` makes
+  // boundaries/no-unknown-files read every file as "unknown" under
+  // eslint-plugin-boundaries@7. Fail loudly at config load with the fix rather
+  // than let a project ship a silently-broken elements map.
+  if (boundaries.noUnknownFiles && Array.isArray(boundaries.elements)) {
+    for (const el of boundaries.elements) {
+      const patterns = Array.isArray(el.pattern) ? el.pattern : [el.pattern]
+      const badGlob = patterns.some((p) => typeof p === 'string' && p.includes('*'))
+      if ('mode' in el || badGlob) {
+        throw new Error(
+          `@serendibyte-co/eslint-config: boundaries/elements descriptor for '${el.type}' uses ` +
+            ('mode' in el ? "a 'mode' key" : "a glob '*' in `pattern`") +
+            ', which makes boundaries/no-unknown-files classify every file as "unknown" under ' +
+            'eslint-plugin-boundaries@7. Use a bare folder pattern with { partialMatch: false }: ' +
+            `{ type: '${el.type}', pattern: 'src/${el.type}', partialMatch: false }.`,
+        )
+      }
+    }
+  }
+
   if (boundaries.elements) settings['boundaries/elements'] = boundaries.elements
   if (boundaries.files) settings['boundaries/files'] = boundaries.files
   if (boundaries.ignore) settings['boundaries/ignore'] = boundaries.ignore
@@ -349,56 +374,98 @@ export function resolveBoundariesConfig(boundaries) {
   return { settings, rules }
 }
 
+/** Strip `//` and `/* *\/` comments and trailing commas so tsconfig JSONC parses. */
+function stripJsonComments(text) {
+  return text
+    .replace(/("(?:[^"\\]|\\.)*")|\/\/[^\n\r]*|\/\*[\s\S]*?\*\//g, (_m, str) => str ?? '')
+    .replace(/,(\s*[}\]])/g, '$1')
+}
+
+/** Read `<rootDir>/tsconfig.json` `compilerOptions.paths` → `{ '@/': 'src' }`. */
+function deriveAliasesFromTsconfig(rootDir) {
+  try {
+    const raw = fs.readFileSync(path.join(rootDir, 'tsconfig.json'), 'utf8')
+    const paths = JSON.parse(stripJsonComments(raw))?.compilerOptions?.paths
+    if (!paths) return null
+    const out = {}
+    for (const [key, targets] of Object.entries(paths)) {
+      if (!key.endsWith('/*')) continue
+      const list = Array.isArray(targets) ? targets : [targets]
+      // Only in-package targets (`./…`, never `../pkg/…`) are in-package
+      // aliases; a `paths` entry that only points outside the package is a
+      // cross-package alias and belongs in `packageAliases`, passed explicitly.
+      const inPkg = list.find((t) => t.startsWith('./') && !t.startsWith('../'))
+      if (!inPkg) continue
+      const val = inPkg.replace(/^\.\//, '').replace(/\/\*$/, '').replace(/\/$/, '')
+      out[key.slice(0, -1)] = val === '' ? '.' : val
+    }
+    return Object.keys(out).length ? out : null
+  } catch {
+    return null
+  }
+}
+
 /**
- * Generates rules enforcing relative paths inside a module and absolute aliases outside.
- * - Files at module root (e.g. src/module/*.ts or src/*.ts) cannot use `../` (must use `./` for siblings, `@/` for external).
- * - Files in module subdirectories (e.g. src/module/sub/**) can use `../` to reach their module root, but cannot use `../../` to escape the module.
+ * Wire `serendibyte/import-boundaries` — the element-aware "relative within a
+ * module, alias across modules, package alias across packages" rule. Same
+ * export name and `boundaryPaths` option shape as the directory-depth heuristic
+ * it replaced in v2.0.0; that heuristic is gone, not shimmed.
+ *
+ * `boundaryPaths: true` on a preset derives `aliases` from `<tsconfigRootDir>/
+ * tsconfig.json` `paths`; `boundaryPaths: { … }` passes rule options through.
  *
  * @param {{
- *   severity?: 'warn' | 'error' | 'off',
- *   rootFiles?: string[],
- *   subFiles?: string[],
+ *   aliases?: Record<string,string> | string[],
+ *   packageAliases?: Record<string,string>,
+ *   elements?: Array<Record<string, unknown>>,
+ *   files?: Array<Record<string, unknown>>,
+ *   root?: string,
+ *   severity?: 'off' | 'warn' | 'error',
+ *   checkTypeImports?: boolean,
+ *   allowSameModuleAlias?: boolean,
+ *   ignore?: string[],
+ *   deriveAliases?: boolean,
+ *   tsconfigRootDir?: string,
+ *   workspaceRoot?: string,
  * }} [options]
  */
-export function boundaryPathRules({
-  severity = 'warn',
-  rootFiles = ['src/*.ts', 'src/*.tsx', 'src/*/*.ts', 'src/*/*.tsx'],
-  subFiles = ['src/*/*/**/*.ts', 'src/*/*/**/*.tsx'],
-} = {}) {
+export function boundaryPathRules(options = {}) {
+  const { severity = 'warn', deriveAliases, tsconfigRootDir, ...ruleOptions } = options
+
+  let aliases = ruleOptions.aliases
+  if ((aliases === undefined || deriveAliases) && tsconfigRootDir) {
+    const derived = deriveAliasesFromTsconfig(tsconfigRootDir)
+    if (derived) aliases = aliases ? { ...derived, ...aliases } : derived
+  }
+  if (!aliases) {
+    throw new Error(
+      '@serendibyte-co/eslint-config: boundaryPaths needs `aliases` — pass one explicitly, ' +
+        'or use `boundaryPaths: true` with a resolvable <tsconfigRootDir>/tsconfig.json that has `paths`.',
+    )
+  }
+  delete ruleOptions.aliases
+
   return [
     {
-      files: rootFiles,
+      plugins: { serendibyte: serendibytePlugin },
       rules: {
-        'no-restricted-imports': [
-          severity,
-          {
-            patterns: [
-              {
-                group: ['../*'],
-                message:
-                  'Module root and src-level files must use absolute alias (@/...) for external dependencies instead of relative parent imports (../).',
-              },
-            ],
-          },
-        ],
-      },
-    },
-    {
-      files: subFiles,
-      rules: {
-        'no-restricted-imports': [
-          severity,
-          {
-            patterns: [
-              {
-                group: ['../../*'],
-                message:
-                  'Submodules must not use multi-level parent traversals (../../) to escape their module. Use @/ instead.',
-              },
-            ],
-          },
-        ],
+        'serendibyte/import-boundaries': [severity, { ...ruleOptions, aliases }],
       },
     },
   ]
+}
+
+/**
+ * Sugar for a v7-native `boundaries/elements` list: one bare-folder descriptor
+ * per module name, `partialMatch: false`. `files`/`policies` stay explicit.
+ *
+ *   folderElements('src', ['users', 'orders', 'shared'])
+ *   // → [{ type: 'users', pattern: 'src/users', partialMatch: false }, …]
+ */
+export function folderElements(root, names, { partialMatch = false } = {}) {
+  return names.map((name) => ({
+    type: name,
+    pattern: root ? `${root}/${name}` : name,
+    partialMatch,
+  }))
 }
