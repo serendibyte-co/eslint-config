@@ -8,9 +8,8 @@
 // what's left on the file(s) they just touched, scoped to those files only,
 // not the whole package. Always exits 0: it's a report, never a gate.
 //
-// Unlike the bash version this was ported from (matchbox21's
-// scripts/report-remaining-lint.sh, which hardcoded that repo's workspace
-// list), this reads workspaces from the consuming project's own
+// Unlike the bash version this was ported from (which hardcoded one repo's
+// workspace list), this reads workspaces from the consuming project's own
 // package.json — no per-project edits needed.
 
 import { $ } from 'bun'

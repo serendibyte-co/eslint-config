@@ -7,7 +7,7 @@ import tseslint from 'typescript-eslint'
 import importX from 'eslint-plugin-import-x'
 import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript'
 import prettier from 'eslint-config-prettier'
-import { base, resolveBoundariesConfig } from './base.js'
+import { base, boundaryPathRules, resolveBoundariesConfig } from './base.js'
 
 /**
  * @param {{
@@ -15,6 +15,7 @@ import { base, resolveBoundariesConfig } from './base.js'
  *   files?: string[],
  *   runtime?: 'worker' | 'bun' | 'node',
  *   boundaries?: Parameters<typeof resolveBoundariesConfig>[0],
+ *   boundaryPaths?: boolean | Parameters<typeof boundaryPathRules>[0],
  *   extraRules?: Record<string, unknown>,
  * }} options
  */
@@ -23,11 +24,21 @@ export function node({
   files = ['**/*.ts'],
   runtime = 'worker',
   boundaries,
+  boundaryPaths,
   extraRules = {},
 }) {
   const globalsByRuntime = { worker: globals.worker, bun: globals.bunBuiltin, node: globals.node }
   return tseslint.config(
     ...base({ tsconfigRootDir, files, boundaries }),
+    ...(boundaryPaths
+      ? boundaryPathRules({
+          deriveAliases: boundaryPaths === true,
+          tsconfigRootDir,
+          elements: boundaries?.elements,
+          files: boundaries?.files,
+          ...(typeof boundaryPaths === 'object' ? boundaryPaths : {}),
+        })
+      : []),
     {
       extends: [importX.flatConfigs.typescript],
       files,
