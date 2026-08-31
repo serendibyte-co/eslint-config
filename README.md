@@ -108,7 +108,7 @@ export default node({
 ```
 
 `boundaryPaths` was a directory-depth `no-restricted-imports` heuristic through
-v1.1.x; **v1.2.0** replaced it in place with the element-aware
+v1.0.x; **v1.2.0** replaced it in place with the element-aware
 `serendibyte/import-boundaries` rule (same option name). Pass an object to set
 options explicitly:
 
