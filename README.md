@@ -46,16 +46,19 @@ Both presets already include Prettier conflict-resolution
 ### Strict length ceilings (opt-in)
 
 `strictLengthRules()` from `/base` returns `max-lines` (300) and
-`max-lines-per-function` (50, or 150 with `{ tsx: true }`), skipping blanks and
+`max-lines-per-function` (65, or 150 with `{ tsx: true }`), skipping blanks and
 comments. Neither preset applies it; spread it into your own per-extension
-blocks so tests and fixtures stay excluded, and pass `severity: 'error'` once
-the package is clean:
+blocks so tests and fixtures stay excluded. Pass `severity: 'error'` once the
+package is clean, and `maxLines` / `maxPerFunction` to dial a threshold for one
+package while keeping the shared defaults everywhere else:
 
 ```js
 import { strictLengthRules } from '@serendibyte-co/eslint-config/base'
 
 { files: ['src/**/*.ts'],  rules: strictLengthRules({ severity: 'error' }) },
 { files: ['src/**/*.tsx'], rules: strictLengthRules({ tsx: true, severity: 'error' }) },
+// a backend package whose handlers legitimately run longer
+{ files: ['src/**/*.ts'],  rules: strictLengthRules({ maxPerFunction: 80 }) },
 ```
 
 ### Architecture boundaries (eslint-plugin-boundaries)
