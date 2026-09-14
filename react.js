@@ -71,6 +71,18 @@ export function react({
         ...reactHooks.configs.recommended.rules,
         ...jsxA11y.flatConfigs.recommended.rules,
         'react/prop-types': 'off',
+        // Hygiene rules eslint-plugin-react leaves out of `recommended` (it
+        // ships them only in `all`, alongside formatting rules that fight
+        // Prettier and several that crash on ESLint 10). Correctness or
+        // cheap/autofixable only — no style dogma. `warn` per the severity
+        // policy; promote per project via extraRules once clean.
+        'react/jsx-no-leaked-render': 'warn', // `{count && <X/>}` renders `0`
+        'react/button-has-type': 'warn', // a typeless <button> inside <form> submits
+        'react/no-array-index-key': 'warn',
+        'react/no-object-type-as-default-prop': 'warn', // `= {}` defaults defeat memo
+        'react/jsx-boolean-value': 'warn',
+        'react/self-closing-comp': 'warn',
+        'react/jsx-no-useless-fragment': ['warn', { allowExpressions: true }],
         'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
         'import-x/no-cycle': 'error',
         'import-x/no-duplicates': 'error',

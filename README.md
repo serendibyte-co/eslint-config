@@ -132,6 +132,16 @@ carry a suggestion only. The `serendibyte` plugin is also exported
 and `boundaryPathRules` / `folderElements` from
 `@serendibyte-co/eslint-config/base`.
 
+### React hygiene rules
+
+On top of `eslint-plugin-react`'s `recommended`, the react preset turns on a
+small curated set the plugin only ships in `all`: `jsx-no-leaked-render`,
+`button-has-type`, `no-array-index-key`, `no-object-type-as-default-prop`,
+`jsx-boolean-value`, `self-closing-comp`, `jsx-no-useless-fragment`. All at
+`warn`; correctness or autofixable only. `all` itself is deliberately not used —
+it is mostly formatting rules that fight Prettier, and several of them crash on
+ESLint 10.
+
 ### Hook file placement (serendibyte/hooks-in-hook-files)
 
 The react preset warns when a custom hook (`useX`) is _defined_ anywhere other
