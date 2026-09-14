@@ -112,17 +112,25 @@ export const importSortRules = {
   'simple-import-sort/exports': 'warn',
 }
 
-// Optional stricter file/function length ceiling (300 lines/file, 50 or 150
+// Optional stricter file/function length ceiling (300 lines/file, 65 or 150
 // per function) beyond sonarjs's looser defaults above. Off by default —
 // call strictLengthRules({ tsx: true }) from a consuming config and spread
 // the result in if you want it, scoped to your own production-code files
 // (exclude *.test.ts and data/fixture directories yourself, per package).
-export function strictLengthRules({ tsx = false } = {}) {
+// `severity` lets a project that is already clean promote to 'error', and
+// `maxLines` / `maxPerFunction` dial the thresholds without re-typing the
+// rule shape. Bodies are counted with blanks and comments skipped.
+export function strictLengthRules({
+  tsx = false,
+  severity = 'warn',
+  maxLines = 300,
+  maxPerFunction = tsx ? 150 : 65,
+} = {}) {
   return {
-    'max-lines': ['warn', { max: 300, skipBlankLines: true, skipComments: true }],
+    'max-lines': [severity, { max: maxLines, skipBlankLines: true, skipComments: true }],
     'max-lines-per-function': [
-      'warn',
-      { max: tsx ? 150 : 50, skipBlankLines: true, skipComments: true },
+      severity,
+      { max: maxPerFunction, skipBlankLines: true, skipComments: true },
     ],
   }
 }

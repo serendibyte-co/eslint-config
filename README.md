@@ -43,6 +43,24 @@ Options: `reactVersion` (`'19'` default), `files`, `boundaries`, `boundaryPaths`
 Both presets already include Prettier conflict-resolution
 (`eslint-config-prettier`) — don't add it again in the consuming project.
 
+### Strict length ceilings (opt-in)
+
+`strictLengthRules()` from `/base` returns `max-lines` (300) and
+`max-lines-per-function` (65, or 150 with `{ tsx: true }`), skipping blanks and
+comments. Neither preset applies it; spread it into your own per-extension
+blocks so tests and fixtures stay excluded. Pass `severity: 'error'` once the
+package is clean, and `maxLines` / `maxPerFunction` to dial a threshold for one
+package while keeping the shared defaults everywhere else:
+
+```js
+import { strictLengthRules } from '@serendibyte-co/eslint-config/base'
+
+{ files: ['src/**/*.ts'],  rules: strictLengthRules({ severity: 'error' }) },
+{ files: ['src/**/*.tsx'], rules: strictLengthRules({ tsx: true, severity: 'error' }) },
+// a backend package whose handlers legitimately run longer
+{ files: ['src/**/*.ts'],  rules: strictLengthRules({ maxPerFunction: 80 }) },
+```
+
 ### Architecture boundaries (eslint-plugin-boundaries)
 
 `base`, `node`, and `react` presets include `eslint-plugin-boundaries` and TypeScript path resolution. You can define architectural boundaries either directly in standard flat config or via the inline `boundaries` option:
