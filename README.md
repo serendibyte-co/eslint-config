@@ -37,7 +37,8 @@ import { react } from '@serendibyte-co/eslint-config/react'
 export default react({ tsconfigRootDir: import.meta.dirname })
 ```
 
-Options: `reactVersion` (`'19'` default), `files`, `boundaries`, `extraRules`.
+Options: `reactVersion` (`'19'` default), `files`, `boundaries`, `boundaryPaths`,
+`hookFiles`, `extraRules`.
 
 Both presets already include Prettier conflict-resolution
 (`eslint-config-prettier`) — don't add it again in the consuming project.
@@ -130,6 +131,26 @@ carry a suggestion only. The `serendibyte` plugin is also exported
 (`@serendibyte-co/eslint-config/plugin`) if you need to wire the rule by hand,
 and `boundaryPathRules` / `folderElements` from
 `@serendibyte-co/eslint-config/base`.
+
+### Hook file placement (serendibyte/hooks-in-hook-files)
+
+The react preset warns when a custom hook (`useX`) is _defined_ anywhere other
+than a hook module — a file under a `hooks/` directory, or a file itself named
+`useX.ts(x)`. Calling hooks from a component is of course fine; this is about
+where the definition lives, so a component file can't quietly grow a private
+hook next to its JSX. Test files (`*.test.*`, `*.spec.*`, `__tests__/`) are
+skipped. Pass `hookFiles: false` to turn it off, or an object to tune it:
+
+```js
+hookFiles: {
+  hooksDirs: ['hooks'],          // directory names that count as hook modules
+  allowHookFilenames: true,      // `src/analytics/useAnalytics.ts` is a hook module too
+  ignore: ['**/*.test.*', '**/*.spec.*', '**/__tests__/**'],
+}
+```
+
+Promote it with `extraRules: { 'serendibyte/hooks-in-hook-files': 'error' }`
+once the consuming project is clean.
 
 ## Pre-commit hooks
 

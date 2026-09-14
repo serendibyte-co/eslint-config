@@ -11,6 +11,7 @@ import importX from 'eslint-plugin-import-x'
 import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript'
 import prettier from 'eslint-config-prettier'
 import { base, boundaryPathRules, resolveBoundariesConfig } from './base.js'
+import serendibytePlugin from './plugin.js'
 
 /**
  * @param {{
@@ -19,6 +20,7 @@ import { base, boundaryPathRules, resolveBoundariesConfig } from './base.js'
  *   reactVersion?: string,
  *   boundaries?: Parameters<typeof resolveBoundariesConfig>[0],
  *   boundaryPaths?: boolean | Parameters<typeof boundaryPathRules>[0],
+ *   hookFiles?: boolean | { hooksDirs?: string[], allowHookFilenames?: boolean, ignore?: string[] },
  *   extraRules?: Record<string, unknown>,
  * }} options
  */
@@ -28,6 +30,7 @@ export function react({
   reactVersion = '19',
   boundaries,
   boundaryPaths,
+  hookFiles = true,
   extraRules = {},
 }) {
   return tseslint.config(
@@ -50,6 +53,7 @@ export function react({
         'react-hooks': reactHooks,
         'react-refresh': reactRefresh,
         'jsx-a11y': jsxA11y,
+        serendibyte: serendibytePlugin,
       },
       settings: {
         // 'detect' calls into eslint-plugin-react's context.getFilename()
@@ -74,6 +78,17 @@ export function react({
         'jsx-a11y/no-noninteractive-element-interactions': 'warn',
         'jsx-a11y/no-autofocus': 'warn',
         'jsx-a11y/label-has-associated-control': 'warn',
+        // Custom hooks live in hooks/ (or a useX-named file), not inline in
+        // component files. `warn` per the severity policy — the codebase this
+        // was extracted from still had a straggler when the rule landed.
+        ...(hookFiles
+          ? {
+              'serendibyte/hooks-in-hook-files': [
+                'warn',
+                ...(typeof hookFiles === 'object' ? [hookFiles] : []),
+              ],
+            }
+          : {}),
         // Scoped to React/TSX specifically rather than repo-wide — still
         // worth carrying here since any React project can hit the same
         // patterns.
