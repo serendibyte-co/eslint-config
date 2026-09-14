@@ -117,11 +117,13 @@ export const importSortRules = {
 // call strictLengthRules({ tsx: true }) from a consuming config and spread
 // the result in if you want it, scoped to your own production-code files
 // (exclude *.test.ts and data/fixture directories yourself, per package).
-export function strictLengthRules({ tsx = false } = {}) {
+// `severity` lets a project that is already clean promote to 'error' without
+// re-typing the thresholds.
+export function strictLengthRules({ tsx = false, severity = 'warn' } = {}) {
   return {
-    'max-lines': ['warn', { max: 300, skipBlankLines: true, skipComments: true }],
+    'max-lines': [severity, { max: 300, skipBlankLines: true, skipComments: true }],
     'max-lines-per-function': [
-      'warn',
+      severity,
       { max: tsx ? 150 : 50, skipBlankLines: true, skipComments: true },
     ],
   }
