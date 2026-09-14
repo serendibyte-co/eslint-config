@@ -53,8 +53,13 @@ export function node({
         'import-x/no-duplicates': 'error',
         // Only for a server that ships logs to a log stream (Workers) —
         // console output IS the point for CLI/seed/tooling scripts
-        // (runtime: 'bun' or 'node'), so don't restrict it there.
-        ...(runtime === 'worker' ? { 'no-console': ['warn', { allow: ['warn', 'error'] }] } : {}),
+        // (runtime: 'bun' or 'node'), so don't restrict it there. Workers
+        // deliver console.* via stdout, so the four operational levels are
+        // the logging API; what this catches is debug/trace/table/dir
+        // leftovers.
+        ...(runtime === 'worker'
+          ? { 'no-console': ['warn', { allow: ['log', 'info', 'warn', 'error'] }] }
+          : {}),
         ...extraRules,
       },
     },

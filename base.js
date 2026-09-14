@@ -155,10 +155,11 @@ export const unicornRules = {
   // conditionals.
   'unicorn/no-nested-ternary': 'off',
   // Default is strict kebab-case, which breaks PascalCase React components.
-  // Allow the case styles a real project typically has in play.
+  // Allow the case styles a real project typically has in play; `__tests__`
+  // is a Jest/Vitest/bun convention, not a naming choice.
   'unicorn/filename-case': [
     'warn',
-    { cases: { kebabCase: true, pascalCase: true, camelCase: true } },
+    { cases: { kebabCase: true, pascalCase: true, camelCase: true }, ignore: [/__tests__/] },
   ],
   'unicorn/import-style': 'warn',
   'unicorn/isolated-functions': 'warn',
