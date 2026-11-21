@@ -20,35 +20,35 @@
   },
   "peerDependencies": {
     "eslint": ">=9.0.0",
-    "typescript": ">=5.0.0"
+    "typescript": ">=5.0.0 <6.1.0"
   },
   "dependencies": {
-    "@eslint-community/eslint-plugin-eslint-comments": "^4.7.2",
+    "@eslint-community/eslint-plugin-eslint-comments": "^4.8.1",
     "@eslint/js": "^10.0.1",
     "eslint-config-prettier": "^10.1.8",
     "eslint-import-resolver-typescript": "^4.4.5",
-    "eslint-plugin-boundaries": "^7.2.0",
-    "eslint-plugin-import-x": "^4.17.1",
+    "eslint-plugin-boundaries": "^7.4.4",
+    "eslint-plugin-import-x": "^4.18.1",
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-no-secrets": "^2.3.3",
     "eslint-plugin-promise": "^7.3.0",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.1.1",
-    "eslint-plugin-react-refresh": "^0.5.4",
-    "eslint-plugin-regexp": "^3.2.0",
-    "eslint-plugin-security": "^4.0.1",
+    "eslint-plugin-react-refresh": "^0.5.8",
+    "eslint-plugin-regexp": "^3.3.3",
+    "eslint-plugin-security": "^4.2.1",
     "eslint-plugin-simple-import-sort": "^14.0.0",
-    "eslint-plugin-sonarjs": "^4.2.0",
+    "eslint-plugin-sonarjs": "^4.2.2",
     "eslint-plugin-unicorn": "^73.0.0",
-    "globals": "^17.11.0",
+    "globals": "^17.14.0",
     "micromatch": "^4.0.8",
-    "typescript-eslint": "^8.67.0"
+    "typescript-eslint": "^8.73.0"
   },
   "devDependencies": {
-    "@types/react": "^19.2.18",
-    "@typescript-eslint/rule-tester": "^8.68.0",
-    "eslint": "^10.8.1",
-    "react": "^19.2.8",
-    "typescript": "^5.7.3"
+    "@types/react": "^19.3.0",
+    "@typescript-eslint/rule-tester": "^8.73.0",
+    "eslint": "^10.15.0",
+    "react": "^19.3.1",
+    "typescript": "^5.9.3"
   }
 }
